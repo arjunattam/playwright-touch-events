@@ -16,12 +16,29 @@ const getCenter = function(id) {
              y: node.offsetTop + node.offsetHeight / 2 }
 }
 
+const getLeftHalf = function(id) {
+    const node = document.getElementById(id);
+    return { x: node.offsetLeft + node.offsetWidth / 4,
+             y: node.offsetTop + node.offsetHeight / 2 }
+}
+
+const getRightHalf = function(id) {
+    const node = document.getElementById(id);
+    return { x: node.offsetLeft + (3 * node.offsetWidth / 4),
+             y: node.offsetTop + node.offsetHeight / 2 }
+}
+
+const dispatchTouch = async (client, type, touchPoints) => {
+    await client.send('Input.dispatchTouchEvent', { type, touchPoints });
+}
+
 describe('touch events', () => {
     let client;
 
-    beforeAll(async () => { 
+    beforeEach(async () => { 
         await page.goto(PAGE_URL); 
         client = await browser.pageTarget(page).createCDPSession();
+        await page.click('button#log')
     });
 
     afterAll(async () => { await browser.close(); })
@@ -37,44 +54,41 @@ describe('touch events', () => {
     });
 
     it('tap should change target color', async () => {
-        // await page.click('button#log');
         const { x, y } = await page.evaluate(getCenter, 'target1');
-        await client.send('Input.dispatchTouchEvent', {
-            type: 'touchStart',
-            touchPoints: [{ x, y }]
-        });
+        await dispatchTouch(client, 'touchStart', [{ x, y }]);
         let color = await page.evaluate(getBgColor, 'target1');
         expect(color).toBe('rgb(255, 255, 0)');
 
-        await client.send('Input.dispatchTouchEvent', {
-            type: 'touchEnd',
-            touchPoints: []
-        });
+        await dispatchTouch(client, 'touchEnd', []);
         color = await page.evaluate(getBgColor, 'target1');
         expect(color).toBe('rgb(255, 255, 255)');
     });
 
     it('swipe should change border style', async () => {
         const { x, y } = await page.evaluate(getCenter, 'target1');
-        await client.send('Input.dispatchTouchEvent', {
-            type: 'touchStart',
-            touchPoints: [{ x, y }]
-        });
+        await dispatchTouch(client, 'touchStart', [{ x, y }]);
         let border = await page.evaluate(getBorderStyle, 'target1');
         expect(border).toBe('solid');
 
-        await client.send('Input.dispatchTouchEvent', {
-            type: 'touchMove',
-            touchPoints: [{ x: x-1, y }]
-        });
+        await dispatchTouch(client, 'touchMove', [{ x: x-1, y }]);
         border = await page.evaluate(getBorderStyle, 'target1');
         expect(border).toBe('dashed');
 
-        await client.send('Input.dispatchTouchEvent', {
-            type: 'touchEnd',
-            touchPoints: []
-        });
+        await dispatchTouch(client, 'touchEnd', []);
         border = await page.evaluate(getBorderStyle, 'target1');
         expect(border).toBe('solid');
     });
+
+    fit('2 taps should show pink', async () => {
+        const { x: lx, y: ly } = await page.evaluate(getLeftHalf, 'target1');
+        const { x: rx, y: ry } = await page.evaluate(getRightHalf, 'target1');
+        console.log(lx, ly);
+        console.log(rx, ry);
+        await dispatchTouch(client, 'touchStart', [{ x: lx, y: ly }]);
+        await dispatchTouch(client, 'touchStart', [{ x: rx, y: ry }])
+
+        color = await page.evaluate(getBgColor, 'target1');
+        await page.screenshot({ path: 'test.png' })
+        expect(color).toBe('rgb(255, 255, 255)');
+    })
 })
