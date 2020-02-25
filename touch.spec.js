@@ -79,16 +79,12 @@ describe('touch events', () => {
         expect(border).toBe('solid');
     });
 
-    fit('2 taps should show pink', async () => {
+    it('2 taps should show pink', async () => {
         const { x: lx, y: ly } = await page.evaluate(getLeftHalf, 'target1');
         const { x: rx, y: ry } = await page.evaluate(getRightHalf, 'target1');
-        console.log(lx, ly);
-        console.log(rx, ry);
-        await dispatchTouch(client, 'touchStart', [{ x: lx, y: ly }]);
-        await dispatchTouch(client, 'touchStart', [{ x: rx, y: ry }])
+        await dispatchTouch(client, 'touchStart', [{ x: lx, y: ly }, { x: rx, y: ry }]);
 
         color = await page.evaluate(getBgColor, 'target1');
-        await page.screenshot({ path: 'test.png' })
-        expect(color).toBe('rgb(255, 255, 255)');
-    })
+        expect(color).toBe('rgb(255, 192, 203)');
+    });
 })
