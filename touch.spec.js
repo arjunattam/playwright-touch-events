@@ -86,5 +86,20 @@ describe('touch events', () => {
 
         color = await page.evaluate(getBgColor, 'target1');
         expect(color).toBe('rgb(255, 192, 203)');
+        await dispatchTouch(client, 'touchEnd', []);
+    });
+
+    it('pinch tap should show green', async () => {
+        const { x: lx, y: ly } = await page.evaluate(getLeftHalf, 'target1');
+        const { x: rx, y: ry } = await page.evaluate(getRightHalf, 'target1');
+        await dispatchTouch(client, 'touchStart', [{ x: lx, y: ly }, { x: rx, y: ry }]);
+        for (let i = 1; i < 50; i++) {
+            // 50 touchMove events that bring-in the 2 touches
+            // app uses node.width / 10 as threshold for pinch
+            await dispatchTouch(client, 'touchMove', [{ x: lx+i, y: ly }, { x: rx-i, y: ry }]);
+        }
+        color = await page.evaluate(getBgColor, 'target1');
+        expect(color).toBe('rgb(0, 128, 0)');
+        await dispatchTouch(client, 'touchEnd', []);
     });
 })
