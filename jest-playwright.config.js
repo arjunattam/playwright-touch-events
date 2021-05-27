@@ -1,7 +1,11 @@
 module.exports = {
-    launchBrowserApp: {
+    launchOptions: {
         headless: false,
         slowMo: 40
     },
-    device: 'Pixel 2'
+    contextOptions: {
+        hasTouch: true,
+        isMobile: true,
+    },
+    devices: ['Pixel 4']
 }

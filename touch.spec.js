@@ -5,9 +5,9 @@ const getBgColor = function(id) {
     return style.getPropertyValue('background-color');
 }
 
-const getBorderStyle = function(id) {
-    const style = window.getComputedStyle(document.getElementById(id));
-    return style.getPropertyValue('border-top-style');
+const getOutlineStyle = function(id) {
+    const style =  window.getComputedStyle(document.getElementById(id));
+    return style.getPropertyValue('outline-style');
 }
 
 const getCenter = function(id) {
@@ -35,9 +35,9 @@ const dispatchTouch = async (client, type, touchPoints) => {
 describe('touch events', () => {
     let client;
 
-    beforeEach(async () => { 
-        await page.goto(PAGE_URL); 
-        client = await browser.pageTarget(page).createCDPSession();
+    beforeEach(async () => {
+        await page.goto(PAGE_URL);
+        client = await page.context().newCDPSession(page);
         await page.click('button#log')
     });
 
@@ -64,19 +64,19 @@ describe('touch events', () => {
         expect(color).toBe('rgb(255, 255, 255)');
     });
 
-    it('swipe should change border style', async () => {
+    it('swipe should change outline style', async () => {
         const { x, y } = await page.evaluate(getCenter, 'target1');
         await dispatchTouch(client, 'touchStart', [{ x, y }]);
-        let border = await page.evaluate(getBorderStyle, 'target1');
-        expect(border).toBe('solid');
+        let outlineStyle = await page.evaluate(getOutlineStyle, 'target1');
+        expect(outlineStyle).toBe('none');
 
-        await dispatchTouch(client, 'touchMove', [{ x: x-1, y }]);
-        border = await page.evaluate(getBorderStyle, 'target1');
-        expect(border).toBe('dashed');
+        await dispatchTouch(client, 'touchMove', [{ x: x - 1, y }]);
+        outlineStyle = await page.evaluate(getOutlineStyle, 'target1');
+        expect(outlineStyle).toBe('dashed');
 
         await dispatchTouch(client, 'touchEnd', []);
-        border = await page.evaluate(getBorderStyle, 'target1');
-        expect(border).toBe('solid');
+        outlineStyle = await page.evaluate(getOutlineStyle, 'target1');
+        expect(outlineStyle).toBe('solid');
     });
 
     it('2 taps should show pink', async () => {
